@@ -1,0 +1,160 @@
+I intentionally designed SecretSplitter to be fully compatible with existing 
+tools since they’ve been around for many years. In addition, this helps assure
+people that I’m not doing anything special. 
+
+Although ssss-split, ssss-combine, and GPG are available on Windows, I tested
+everything here using Ubuntu 11.10 to ensure broad compatibility. You're 
+welcome to verify my results by first getting ssss which is available via:
+
+sudo apt-get install ssss
+
+NOTE: I do everything manually here for demonstration purposes. You're 
+encouraged to create and share shell scripts to help others who might do this 
+from the command line.
+
+========================= Working with Messages ===============================
+
+In my blog post, you can see the following split message pieces ("shares"):
+
+3c1-1-ed6c3642885d0fb57a4bb078513f8cca4306f00c7eba
+061-2-e6d823681303ef4bd49cccfe39623aa788a1d67b1d4f
+151-3-1fb42f8e65c9b0e1b12e1883e156a88331c334563be5
+
+To verify compatibility, I ran these commands:
+
+jeff@ubuntu:~$ ssss-combine -t 2
+WARNING: couldn't get memory lock (ENOMEM, try to adjust RLIMIT_MEMLOCK!).
+Enter 2 shares separated by newlines:
+Share [1/2]: 3c1-1-ed6c3642885d0fb57a4bb078513f8cca4306f00c7eba
+Share [2/2]: 061-2-e6d823681303ef4bd49cccfe39623aa788a1d67b1d4f
+Resulting secret: 1.big.BOOM@thunder.mil
+
+and verified the 3rd share as:
+
+jeff@ubuntu:~$ ssss-combine -t 2
+WARNING: couldn't get memory lock (ENOMEM, try to adjust RLIMIT_MEMLOCK!).
+Enter 2 shares separated by newlines:
+Share [1/2]: 061-2-e6d823681303ef4bd49cccfe39623aa788a1d67b1d4f
+Share [2/2]: 151-3-1fb42f8e65c9b0e1b12e1883e156a88331c334563be5
+Resulting secret: 1.big.BOOM@thunder.mil
+
+(NOTE: you can avoid the ENOMEM warning by using "sudo ssss-combine -t 2" 
+instead.)
+
+I also verified that you can create compatible messages:
+
+jeff@ubuntu:~$ ssss-split -t 2 -n 3
+WARNING: couldn't get memory lock (ENOMEM, try to adjust RLIMIT_MEMLOCK!).
+Enter the secret, at most 128 ASCII characters: 1.big.BOOM@thunder.mil
+Using a 176 bit security level.
+1-9d97f21a25671d5bdd77008bb4e3cdb1b9738df5cab0
+2-072fabd94977ca969ae5ad19f2dab8507c4b2d88755b
+3-8eb86367928787d2586bc997cf326b0f3f5cb25ce7fb
+
+I verified that any 2 of these 3 messages work in SecretSplitter as-is. 
+However, we can also create fully-compatible checksums too. First, we
+prefix every share with "1-" to denote that it's a message. Then, we
+get the SHA-1 hash of each of these shares:
+
+jeff@ubuntu:~$ echo -n '1-1-9d97f21a25671d5bdd77008bb4e3cdb1b9738df5cab0' | sha1sum
+65a7751182da8eb474d34367d070c986fe0aaaee  -
+
+jeff@ubuntu:~$ echo -n '1-2-072fabd94977ca969ae5ad19f2dab8507c4b2d88755b' | sha1sum
+a40fbadc80dfbe354f360cd31e28880468ead79b  -
+
+jeff@ubuntu:~$ echo -n '1-3-8eb86367928787d2586bc997cf326b0f3f5cb25ce7fb' | sha1sum
+fb47cd67facd56dbb788d7edc6324369bc8a17d2  -
+
+Now, just append the first byte (i.e. the first two characters/nibbles) of each SHA-1 
+hash above to get:
+
+651-1-9d97f21a25671d5bdd77008bb4e3cdb1b9738df5cab0
+a41-2-072fabd94977ca969ae5ad19f2dab8507c4b2d88755b
+fb1-3-8eb86367928787d2586bc997cf326b0f3f5cb25ce7fb
+
+You can use any of these two in SecretSplitter to recover the message without 
+errors.
+
+========================= Working with Files ==================================
+
+You can also open files created in SecretSplitter on Linux. First, we'll need
+to recover the secret passphrase from the shares:
+
+jeff@ubuntu:~$ ssss-combine -t 2 -x
+WARNING: couldn't get memory lock (ENOMEM, try to adjust RLIMIT_MEMLOCK!).
+Enter 2 shares separated by newlines:
+Share [1/2]: 632-1-207c695c143a22eb32e76e8f4c675cbd
+Share [2/2]: a22-2-29e3156730e49746bcc4f9ff201a922c
+Resulting secret: c6b9e1dbf5f6c09a62b75693f517768d
+
+Alternatively, we could use the bottom 2 shares:
+
+jeff@ubuntu:~$ ssss-combine -t 2 -x
+WARNING: couldn't get memory lock (ENOMEM, try to adjust RLIMIT_MEMLOCK!).
+Enter 2 shares separated by newlines:
+Share [1/2]: a22-2-29e3156730e49746bcc4f9ff201a922c
+Share [2/2]: 952-3-d169c171d351042239258b2f0431d7dc
+
+Resulting secret: c6b9e1dbf5f6c09a62b75693f517768d
+
+As you can see, the recovered passphrase is the same.
+
+NOTE: It's critical to note the "-x" flag that specifies that heXadecimal
+output is assumed.
+
+We can now use this recovered key directly with GPG:
+
+jeff@ubuntu:~$ gpg "If Something Happens to Jeff.splitsecret"
+gpg: AES256 encrypted data
+(passphrase dialog appears where we type "c6b9e1dbf5f6c09a62b75693f517768d")
+gpg: encrypted with 1 passphrase
+gpg: If Something Happens to Jeff.splitsecret: unknown suffix
+Enter new filename [If Something Happens to Jeff.zip]:
+
+At this point, I verified the recovered file contents.
+
+We can also create files on Linux and have them work with SecretSplitter. 
+First, we create a random 128 bit key in hexadecimal notation (32 hex characters):
+
+jeff@ubuntu:~$ cat /dev/urandom | tr -dc ‘0-9a-f’ | fold -w 32 | head -n 1
+a95970240705fc04d3ca67c6bf7ceeed
+
+We can then split this random key:
+
+jeff@ubuntu:~$ ssss-split -t 2 -n 3 -x
+WARNING: couldn't get memory lock (ENOMEM, try to adjust RLIMIT_MEMLOCK!).
+Generating shares using a (2,3) scheme with dynamic security level.
+Enter the secret, as most 256 hex digits: a95970240705fc04d3ca67c6bf7ceeed
+Using a 128 bit security level.
+1-368a7486c6b01e7922a55889dc6316d9
+2-d87036d1c5171259b4d0f029dbb5c651
+3-822608e33b8a1646390397b626f8762b
+
+Like before, we add a prefix to indicate each share's type (it's a file = 2)
+and then get the SHA-1 hash:
+
+jeff@ubuntu:~$ echo -n '2-1-368a7486c6b01e7922a55889dc6316d9' | sha1sum
+83937c41d8ee0faf766b35ba9e6fc8f676f414c7  -
+
+jeff@ubuntu:~$ echo -n '2-2-d87036d1c5171259b4d0f029dbb5c651' | sha1sum
+2e8ef2956183885e1422fe76f3be37b4f6046527  -
+
+jeff@ubuntu:~$ echo -n '2-3-822608e33b8a1646390397b626f8762b' | sha1sum
+e7a88b43de1b91bd4230181617e8ce0a4912a8f9  -
+
+Adding the first byte of the hash gives us these shares:
+
+832-1-368a7486c6b01e7922a55889dc6316d9
+2e2-2-d87036d1c5171259b4d0f029dbb5c651
+e72-3-822608e33b8a1646390397b626f8762b
+
+We can now create the encrypted file using GPG in a way that's compatible with 
+SecretSplitter:
+
+jeff@ubuntu:~$ echo -n "Hello from Ubuntu!" > hello.txt
+jeff@ubuntu:~$ gpg --s2k-digest-algo SHA256 --s2k-cipher-algo AES256 -c hello.txt
+(prompted for passphrase, entered in "a95970240705fc04d3ca67c6bf7ceeed" and 
+then hello.txt.gpg was generated)
+
+You can then use any 2 of the above 3 shares and the generated GPG file in 
+SecretSplitter to decrypt it.

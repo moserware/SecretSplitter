@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{66078722-54F0-4050-9ABA-0CA724222076}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Moserware.SecretSplitter.Ssss</RootNamespace>
+    <AssemblyName>ssss-combine</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Arguments.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\SecretSplitter\Algebra\FiniteFieldPoint.cs" />
+    <Compile Include="..\SecretSplitter\Algebra\FiniteFieldPolynomial.cs" />
+    <Compile Include="..\SecretSplitter\Algebra\IrreduciblePolynomial.cs" />
+    <Compile Include="..\SecretSplitter\Algebra\LagrangeInterpolator.cs" />
+    <Compile Include="..\SecretSplitter\Numerics\BigIntegerExtensions.cs" />
+    <Compile Include="..\SecretSplitter\Security\Cryptography\Diffuser.cs" />
+    <Compile Include="..\SecretSplitter\Security\Cryptography\HexadecimalPasswordGenerator.cs" />
+    <Compile Include="..\SecretSplitter\Security\Cryptography\OpenPgp.cs" />
+    <Compile Include="..\SecretSplitter\Security\Cryptography\SecretCombiner.cs" />
+    <Compile Include="..\SecretSplitter\Security\Cryptography\SecretEncoder.cs" />
+    <Compile Include="..\SecretSplitter\Security\Cryptography\SecretShare.cs" />
+    <Compile Include="..\SecretSplitter\Security\Cryptography\SecretSplitter.cs" />
+    <Compile Include="..\SecretSplitter\ByteExtensions.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+echo F | xcopy /Y "$(TargetPath)" "$(TargetDir)ssss-split.exe"</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
