@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Moserware.Numerics;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
-using Moserware.Numerics;
 
 namespace Moserware.Algebra {
     /// <summary>
@@ -30,8 +30,16 @@ namespace Moserware.Algebra {
             string format = sb.ToString();
 
             string shareNumber = ((long) X.PolynomialValue).ToString(format);
+            
+
+            var expectedByteCount = Y.PrimePolynomial.SizeInBytes;
+            var pointBytes = Y.PolynomialValue.ToUnsignedBigEndianBytes();
+
+            // Occasionally, the value won't fill all bytes, so we need to prefix with 0's as needed
+            var prefixedPointBytes = Enumerable.Range(0, expectedByteCount - pointBytes.Length).Select(ix => (byte)0).Concat(pointBytes);
+
             // To hex string on its own just wasn't working right
-            string shareValue = String.Join("", Y.PolynomialValue.ToUnsignedBigEndianBytes().Select(b => b.ToString("x2")));
+            string shareValue = String.Join("", prefixedPointBytes.Select(b => b.ToString("x2")));
             return shareNumber + "-" + shareValue;
         }
         
