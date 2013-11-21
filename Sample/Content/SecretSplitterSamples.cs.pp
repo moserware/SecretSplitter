@@ -65,7 +65,9 @@ namespace $rootnamespace$ {
 
             // Here's an example of how to do this hybrid approach:
 
-            // First, get a master secret of whatever size you want
+            // First, get a master secret of whatever size you want. 128 bits is plenty big and is a nice
+            // balance of share sizes and security. However, to be fun, let's be super paranoid and go with
+            // 256 bits (at the cost of bigger shares!)
             var masterPassword = HexadecimalPasswordGenerator.GeneratePasswordOfBitSize(bitSize: 256);
             var masterPasswordBytes = SecretEncoder.ParseHexString(masterPassword);
 
