@@ -3,11 +3,11 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("SecretSplitter")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Splits up secrets using Shamir's thresholding secret-sharing scheme")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Moserware")]
 [assembly: AssemblyProduct("SecretSplitter")]
-[assembly: AssemblyCopyright("Copyright © Jeff Moser 2011")]
+[assembly: AssemblyCopyright("Copyright © Jeff Moser 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,5 +20,4 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyVersion(Moserware.Security.Cryptography.Versioning.VersionInfo.CurrentVersionString)]
 [assembly: AssemblyFileVersion(Moserware.Security.Cryptography.Versioning.VersionInfo.CurrentVersionString)]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("SecretSplitterConsole")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("UnitTests")]
+[assembly: InternalsVisibleTo("SecretSplitterConsole")]
