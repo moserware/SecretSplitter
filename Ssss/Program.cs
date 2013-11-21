@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Moserware.Algebra;
+using Moserware.Numerics;
+using Moserware.Security.Cryptography;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
-using Moserware.Algebra;
-using Moserware.Numerics;
-using Moserware.Security.Cryptography;
 
 namespace Ssss {
     // NOTE: I (Jeff) went out of my way to make this program very similar to B. Poettering's 
@@ -16,7 +16,7 @@ namespace Ssss {
     // permission from B. Poettering to release my compatible derivation under the MIT license 
     // (see my License.txt) included with this code for more details.
     internal class Program {
-        private const string Version = "0.51 (.net)";
+        private const string Version = "0.52 (.net)";
 
         private static void Main(string[] args) {
             Arguments.ParseArguments(args);

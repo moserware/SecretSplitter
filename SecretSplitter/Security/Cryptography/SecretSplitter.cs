@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Moserware.Algebra;
+using Moserware.Numerics;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Security;
 using System.Security.Cryptography;
-using Moserware.Algebra;
-using Moserware.Numerics;
 
 namespace Moserware.Security.Cryptography {
     public static class SecretSplitter {
@@ -149,7 +149,7 @@ namespace Moserware.Security.Cryptography {
 
 namespace Moserware.Security.Cryptography.Versioning {
     public static class VersionInfo {
-        public const string CurrentVersionString = "0.1";
+        public const string CurrentVersionString = "0.11";
         public static Version CurrentVersion = new Version(CurrentVersionString);
     }
 }
