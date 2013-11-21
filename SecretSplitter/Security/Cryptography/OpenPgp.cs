@@ -918,8 +918,6 @@ namespace Moserware.Security.Cryptography {
             var hashContexts = new HashAlgorithm[Math.Max((outputSizeNeededInBytes + hashSizeInOctets - 1)/hashSizeInOctets, 1)];
             hashContexts[0] = firstHashContext;
 
-            var outputBuffer = new byte[hashSizeInOctets];
-
             for(int i = 1; i < hashContexts.Length; i++) {
                 hashContexts[i] = _HashFactory();
 
@@ -931,7 +929,7 @@ namespace Moserware.Security.Cryptography {
                 // preloaded with 1 octet of zero, the third is preloaded with two
                 // octets of zeros, and so forth).
                 var zeros = new byte[i];
-                hashContexts[i].TransformBlock(zeros, 0, zeros.Length, outputBuffer, 0);
+                hashContexts[i].TransformBlock(zeros, 0, zeros.Length, null, 0);
             }
 
             IntPtr passphrasePointer = IntPtr.Zero;
@@ -957,9 +955,9 @@ namespace Moserware.Security.Cryptography {
                         var currentHashContext = hashContexts[ixHasher];
                         int currentContextBytesToHash = hasDoneFirstIteration ? Math.Min(octectsLeftToHash, maxOctetsPerIteration) : maxOctetsPerIteration;
                         int saltBytesToHash = Math.Min(currentContextBytesToHash, salt.Length);
-                        currentHashContext.TransformBlock(salt, 0, saltBytesToHash, outputBuffer, 0);
+                        currentHashContext.TransformBlock(salt, 0, saltBytesToHash, null, 0);
                         currentContextBytesToHash -= saltBytesToHash;
-                        currentHashContext.TransformBlock(passphraseBytes, 0, currentContextBytesToHash, outputBuffer, 0);
+                        currentHashContext.TransformBlock(passphraseBytes, 0, currentContextBytesToHash, null, 0);
                     }
 
                     hasDoneFirstIteration = true;
@@ -975,8 +973,11 @@ namespace Moserware.Security.Cryptography {
             }
 
             var ms = new MemoryStream();
+
+            // have to have some output buffer, even though it's never used (see HashAlgorithm source for proof)
+            var dummyOutputBuffer = new byte[0];
             foreach(var hashContext in hashContexts) {
-                hashContext.TransformFinalBlock(outputBuffer, 0, 0);
+                hashContext.TransformFinalBlock(dummyOutputBuffer, 0, 0);
                 ms.Write(hashContext.Hash, 0, hashContext.Hash.Length);
             }
 
