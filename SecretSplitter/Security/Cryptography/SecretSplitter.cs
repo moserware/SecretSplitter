@@ -149,7 +149,7 @@ namespace Moserware.Security.Cryptography {
 
 namespace Moserware.Security.Cryptography.Versioning {
     public static class VersionInfo {
-        public const string CurrentVersionString = "0.11";
+        public const string CurrentVersionString = "0.12";
         public static Version CurrentVersion = new Version(CurrentVersionString);
     }
 }

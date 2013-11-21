@@ -16,7 +16,7 @@ namespace Ssss {
     // permission from B. Poettering to release my compatible derivation under the MIT license 
     // (see my License.txt) included with this code for more details.
     internal class Program {
-        private const string Version = "0.52 (.net)";
+        private const string Version = "0.53 (.net)";
 
         private static void Main(string[] args) {
             Arguments.ParseArguments(args);
