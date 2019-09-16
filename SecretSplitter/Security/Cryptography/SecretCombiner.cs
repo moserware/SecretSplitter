@@ -31,6 +31,11 @@ namespace Moserware.Security.Cryptography {
                 throw new SecretSplitterException("You must provide at least one secret share (piece).");
             }
 
+            int expectedShareLength = allShares[0].ParsedValue.Substring(allShares[0].ParsedValue.LastIndexOf('-') + 1).Length;
+            if (!allShares.All(s => s.ParsedValue.Substring(s.ParsedValue.LastIndexOf('-') + 1).Length == expectedShareLength)) {
+                throw new SecretSplitterException("Secret shares (pieces) must be be of the same size.");
+            }
+
             var expectedShareType = allShares[0].ShareType;
             if(!allShares.All(s => s.ShareType == expectedShareType)) {
                 throw new SecretSplitterException("Secret shares (pieces) must be be of the same type.");
@@ -45,7 +50,14 @@ namespace Moserware.Security.Cryptography {
             var scrambledValue = secretCoefficient.PolynomialValue;
             var unscrambledValue = diffuser.Unscramble(scrambledValue, scrambledValue.ToByteArray().Length);
             var recoveredSecret = unscrambledValue.ToUnsignedBigEndianBytes();
-            
+
+            int paddingNeeded = expectedShareLength / 2 - recoveredSecret.Length;
+            if (paddingNeeded > 0) {
+                var newArray = new byte[paddingNeeded + recoveredSecret.Length];
+                Array.Copy(recoveredSecret, 0, newArray, paddingNeeded, recoveredSecret.Length);
+                recoveredSecret = newArray;
+            }
+
             return new CombinedSecret(allShares[0].ShareType, recoveredSecret);
         }
     }
