@@ -8,7 +8,7 @@ namespace Moserware.Security.Cryptography {
     /// </summary>
     public abstract class Diffuser {
         public virtual BigInteger Scramble(BigInteger input, int rawByteLength) {
-            return Scramble(input);
+            return Scramble(input, rawByteLength);
         }
 
         protected virtual BigInteger Scramble(BigInteger input) {
@@ -16,7 +16,7 @@ namespace Moserware.Security.Cryptography {
         }
 
         public virtual BigInteger Unscramble(BigInteger input, int rawByteLength) {
-            return Unscramble(input);
+            return Unscramble(input, rawByteLength);
         }
 
         protected virtual BigInteger Unscramble(BigInteger input) {
@@ -38,42 +38,65 @@ namespace Moserware.Security.Cryptography {
     //       my derived code under the MIT license (instead of GPL) and was generously 
     //       granted permission by him. For more license details, see License.txt included
     //       with this code.
-    public class XteaDiffuser : Diffuser {
+    public class XteaDiffuser : Diffuser     {
         private const int InnerRounds = 32;
         private const int OuterRounds = 40;
         private const UInt32 Delta = 0x9E3779B9;
         private const UInt32 DecodeInitialSum = unchecked(InnerRounds * Delta);
 
-        protected override BigInteger Scramble(BigInteger input) {
-            int actualByteSize;
-            byte[] integerBytes = GetBigIntegerBytesWithLeastSignificantWordFirstUsing16BitMsbFirstWords(input,
-                                                                                                         out actualByteSize);
+        public override BigInteger Scramble(BigInteger input, int rawByteLength) {
 
-            for (int i = 0; i < (OuterRounds * actualByteSize); i += 2) {
-                EncodeSlice(integerBytes, i, actualByteSize, EncipherBlock);
+            byte[] integerBytes = GetBigIntegerBytesWithLeastSignificantWordFirstUsing16BitMsbFirstWords(input);
+            int integerBytesNeededSize = (rawByteLength + 1) / 2 * 2;
+            int padLen = integerBytesNeededSize - integerBytes.Length;
+            if (padLen > 0) {
+                byte[] padded = new byte[integerBytesNeededSize];
+                Array.Copy(integerBytes, padded, integerBytes.Length);
+                integerBytes = padded;
+            }
+            if (rawByteLength % 2 == 1) {
+                integerBytes[rawByteLength - 1] = integerBytes[rawByteLength];
+            }
+            for (int i = 0; i < (OuterRounds * rawByteLength); i += 2) {
+                EncodeSlice(integerBytes, i, rawByteLength, EncipherBlock);
+            }
+            if (rawByteLength % 2 == 1) {
+                integerBytes[rawByteLength] = integerBytes[rawByteLength - 1];
+                integerBytes[rawByteLength - 1] = 0;
             }
 
-            return GetBigIntegerFromLeastSignificantWordsFirstWith16BitMsbFirstWords(integerBytes, actualByteSize);
+            return GetBigIntegerFromLeastSignificantWordsFirstWith16BitMsbFirstWords(integerBytes);
         }
 
-        protected override BigInteger Unscramble(BigInteger input) {
-            int actualByteSize;
-            byte[] integerBytes = GetBigIntegerBytesWithLeastSignificantWordFirstUsing16BitMsbFirstWords(input,
-                                                                                                         out actualByteSize);
+        public override BigInteger Unscramble(BigInteger input, int rawByteLength) {
 
-            for (int i = (OuterRounds * actualByteSize) - 2; i >= 0; i -= 2) {
-                EncodeSlice(integerBytes, i, actualByteSize, DecipherBlock);
+            byte[] integerBytes = GetBigIntegerBytesWithLeastSignificantWordFirstUsing16BitMsbFirstWords(input);
+            int integerBytesNeededSize = (rawByteLength + 1) / 2 * 2;
+            int padLen = integerBytesNeededSize - integerBytes.Length;
+            if (padLen > 0)
+            {
+                byte[] padded = new byte[integerBytesNeededSize];
+                Array.Copy(integerBytes, padded, integerBytes.Length);
+                integerBytes = padded;
+            }
+            if (rawByteLength % 2 == 1) {
+               integerBytes[rawByteLength - 1] = integerBytes[rawByteLength];
+            }
+            for (int i = (OuterRounds * rawByteLength) - 2; i >= 0; i -= 2) {
+                EncodeSlice(integerBytes, i, rawByteLength, DecipherBlock);
+            }
+            if (rawByteLength % 2 == 1) {
+                integerBytes[rawByteLength] = integerBytes[rawByteLength - 1];
+                integerBytes[rawByteLength - 1] = 0;
             }
 
-            return GetBigIntegerFromLeastSignificantWordsFirstWith16BitMsbFirstWords(integerBytes, actualByteSize);
+            return GetBigIntegerFromLeastSignificantWordsFirstWith16BitMsbFirstWords(integerBytes);
         }
 
         // The whole point of the diffuser is to diffuse bits, that's why we'll pick least significant words
         // with most significant word bits. This alone does some diffusion.
-        private static byte[] GetBigIntegerBytesWithLeastSignificantWordFirstUsing16BitMsbFirstWords(BigInteger input,
-                                                                                                     out int actualBytesWithoutPadding) {
+        private static byte[] GetBigIntegerBytesWithLeastSignificantWordFirstUsing16BitMsbFirstWords(BigInteger input) {
             byte[] bigEndianBytes = input.ToUnsignedBigEndianBytes();
-            actualBytesWithoutPadding = bigEndianBytes.Length;
             bool isOddNumberOfBytes = bigEndianBytes.Length % 2 != 0;
             if (isOddNumberOfBytes) {
                 // make sure it's even
@@ -95,22 +118,10 @@ namespace Moserware.Security.Cryptography {
                 }
             }
 
-            bool hasExtraPaddingByte = bigEndianBytes.Length != actualBytesWithoutPadding;
-
-            if (hasExtraPaddingByte) {
-                result[bigEndianBytes.Length - 2] = result[bigEndianBytes.Length - 1];
-            }
-
             return result;
         }
 
-        private static BigInteger GetBigIntegerFromLeastSignificantWordsFirstWith16BitMsbFirstWords(byte[] wordBytes,
-                                                                                                    int actualBytes) {
-            bool hasBytePadding = actualBytes % 2 == 1;
-            if (hasBytePadding) {
-                wordBytes[wordBytes.Length - 1] = wordBytes[wordBytes.Length - 2];
-                wordBytes[wordBytes.Length - 2] = 0;
-            }
+        private static BigInteger GetBigIntegerFromLeastSignificantWordsFirstWith16BitMsbFirstWords(byte[] wordBytes) {
 
             byte[] bigEndianBytes = new byte[wordBytes.Length];
 
@@ -183,7 +194,7 @@ namespace Moserware.Security.Cryptography {
 
             return _XteaDiffuser.Scramble(input, rawByteLength);
         }
-        
+
         public override BigInteger  Unscramble(BigInteger input, int rawByteLength) {
             if(rawByteLength < _ByteCutoff) {
                 return input;

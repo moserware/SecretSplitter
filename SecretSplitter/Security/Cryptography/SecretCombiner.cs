@@ -11,24 +11,29 @@ namespace Moserware.Security.Cryptography {
     // REVIEW: Keep this as static for simple API usage?
     public static class SecretCombiner {
         private static readonly Diffuser DefaultDiffuser = new SsssDiffuser();
-        
+	
         public static CombinedSecret Combine(string allShares) {
             return Combine(Regex.Matches(allShares, SecretShare.RegexPattern).OfType<Match>().Select(m => SecretShare.Parse(m.Value)), DefaultDiffuser);
         }
-
+    
         public static CombinedSecret Combine(IEnumerable<string> allShares) {
             return Combine(allShares, DefaultDiffuser);
         }
-
+    
         public static CombinedSecret Combine(IEnumerable<string> allShares, Diffuser diffuser) {
             return Combine(allShares.Select(share => Regex.Match(share, SecretShare.RegexPattern).Value).Select(SecretShare.Parse), diffuser);
         }
-        
+	
         private static CombinedSecret Combine(IEnumerable<SecretShare> shares, Diffuser diffuser) {
             var allShares = shares.ToArray();
 
             if(allShares.Length == 0) {
                 throw new SecretSplitterException("You must provide at least one secret share (piece).");
+            }
+
+            int expectedShareLength = allShares[0].ParsedValue.Substring(allShares[0].ParsedValue.LastIndexOf('-') + 1).Length;
+            if(!allShares.All(s => s.ParsedValue.Substring(s.ParsedValue.LastIndexOf('-') + 1).Length == expectedShareLength)) {
+                throw new SecretSplitterException("Secret shares (pieces) must be be of the same size.");
             }
 
             var expectedShareType = allShares[0].ShareType;
@@ -43,9 +48,18 @@ namespace Moserware.Security.Cryptography {
 
             var secretCoefficient = LagrangeInterpolator.EvaluateAtZero(allShares.Select(s => s.Point));
             var scrambledValue = secretCoefficient.PolynomialValue;
-            var unscrambledValue = diffuser.Unscramble(scrambledValue, scrambledValue.ToByteArray().Length);
+            var unscrambledValue = diffuser.Unscramble(scrambledValue, expectedShareLength / 2);
             var recoveredSecret = unscrambledValue.ToUnsignedBigEndianBytes();
-            
+
+            int paddingNeeded = expectedShareLength / 2 - recoveredSecret.Length;
+            if (paddingNeeded > 0) {
+                var padBytes = new byte[paddingNeeded];
+                var newArray = new byte[paddingNeeded + recoveredSecret.Length];
+                Array.Copy(padBytes, 0, newArray, 0, paddingNeeded);
+                Array.Copy(recoveredSecret, 0, newArray, paddingNeeded, recoveredSecret.Length);
+                recoveredSecret = newArray;
+            }
+
             return new CombinedSecret(allShares[0].ShareType, recoveredSecret);
         }
     }
