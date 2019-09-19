@@ -158,3 +158,9 @@ then hello.txt.gpg was generated)
 
 You can then use any 2 of the above 3 shares and the generated GPG file in 
 SecretSplitter to decrypt it.
+
+**************************************************************************
+Shares produced by version 0.20 of this program may not function properly
+with earlier versions of this program; shares produced by earlier versions 
+of this program my not function properly with version 0.20 of this program.  
+**************************************************************************
