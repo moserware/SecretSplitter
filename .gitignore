@@ -50,3 +50,5 @@ _ReSharper*/
 
 # Git temp files
 *.orig
+
+.vs/
