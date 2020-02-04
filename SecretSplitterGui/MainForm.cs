@@ -294,11 +294,11 @@ namespace SecretSplitterWinForms {
                         }
                     }
                 } 
-                catch(ModificationDetectedException modificationDetectedException) {
+                catch(ModificationDetectedException) {
                     ShowError("It looks like the file was tampered with or the given secret pieces were invalid.",
                               "Modification Detected");
                 }
-                catch(Exception exception) {
+                catch(Exception) {
                     ShowError("There was an error while trying to decrypt the file. Please check to make sure that you only typed in the fewest number of secret pieces needed and that you selected the proper file to decrypt and that the file wasn't tampered.");
                 }
             }

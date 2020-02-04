@@ -1,4 +1,4 @@
-﻿namespace SecretSplitterWinForms {
+﻿namespace SecretSplitterWinForms { 
     partial class MainForm {
         /// <summary>
         /// Required designer variable.

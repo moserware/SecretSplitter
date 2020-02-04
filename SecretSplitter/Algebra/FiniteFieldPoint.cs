@@ -97,7 +97,7 @@ namespace Moserware.Algebra {
                 result = new FiniteFieldPoint(x, y);
                 return true;
             }
-            catch(Exception exception) {
+            catch(Exception) {
                 result = null;
                 return false;
             }
